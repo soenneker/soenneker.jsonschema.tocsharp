@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Security;
-using System.Text;
-using System.Text.Json;
+using Soenneker.Utils.PooledStringBuilders;
+using Soenneker.Utils.Json;
 using System.Text.RegularExpressions;
 
 namespace Soenneker.JsonSchema.ToCSharp.Internal;
@@ -24,7 +24,7 @@ internal static class CSharpNames
 
     internal static string Identifier(string value)
     {
-        var result = new StringBuilder(value.Length + 1);
+        using var result = new PooledStringBuilder(value.Length + 1);
         bool upper = true;
         foreach (char c in value)
         {
@@ -44,7 +44,7 @@ internal static class CSharpNames
         return candidate;
     }
 
-    internal static string Literal(string value) => JsonSerializer.Serialize(value);
+    internal static string Literal(string value) => JsonUtil.Serialize(value, GeneratorJsonContext.Default.String);
     internal static string Xml(string value) => SecurityElement.Escape(value)!.Replace("\r", " ").Replace("\n", " ");
 }
 

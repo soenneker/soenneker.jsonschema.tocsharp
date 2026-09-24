@@ -5,12 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Soenneker.JsonSchema.ToCSharp.Abstract;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.JsonSchema.ToCSharp.Tests;
 
-public sealed class SchemaGenerationTests
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class SchemaGenerationTests : HostedUnitTest
 {
-    private readonly JsonSchemaToCSharp _generator = new();
+    private readonly IJsonSchemaToCSharp _generator;
+
+    public SchemaGenerationTests(Host host) : base(host)
+    {
+        _generator = Resolve<IJsonSchemaToCSharp>(true);
+    }
 
     [Test]
     public async Task Unions_use_string_and_numeric_constraints()

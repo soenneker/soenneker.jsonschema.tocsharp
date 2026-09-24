@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Soenneker.JsonSchema.ToCSharp.Abstract;
+using Soenneker.Utils.File.Registrars;
 
 namespace Soenneker.JsonSchema.ToCSharp.Registrars;
 
@@ -14,7 +15,7 @@ public static class JsonSchemaToCSharpRegistrar
     /// </summary>
     public static IServiceCollection AddJsonSchemaToCSharpAsSingleton(this IServiceCollection services)
     {
-        services.TryAddSingleton<IJsonSchemaToCSharp, JsonSchemaToCSharp>();
+        services.AddFileUtilAsSingleton().TryAddSingleton<IJsonSchemaToCSharp, JsonSchemaToCSharp>();
 
         return services;
     }
@@ -24,7 +25,7 @@ public static class JsonSchemaToCSharpRegistrar
     /// </summary>
     public static IServiceCollection AddJsonSchemaToCSharpAsScoped(this IServiceCollection services)
     {
-        services.TryAddScoped<IJsonSchemaToCSharp, JsonSchemaToCSharp>();
+        services.AddFileUtilAsScoped().TryAddScoped<IJsonSchemaToCSharp, JsonSchemaToCSharp>();
 
         return services;
     }
