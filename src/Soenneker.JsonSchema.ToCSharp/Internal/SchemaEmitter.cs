@@ -258,9 +258,9 @@ internal sealed class SchemaEmitter
                 {
                     JsonObject branch = obj.DeepClone().AsObject();
                     branch["type"] = type;
-                    alternatives.Add(branch);
+                    alternatives.Add((JsonNode)branch);
                 }
-                if (nullable) alternatives.Add(new JsonObject { ["type"] = "null" });
+                if (nullable) alternatives.Add((JsonNode)new JsonObject { ["type"] = "null" });
                 return EmitUnion(schema, suggestion, alternatives, false);
             }
         string? kind = types.SingleOrDefault();
