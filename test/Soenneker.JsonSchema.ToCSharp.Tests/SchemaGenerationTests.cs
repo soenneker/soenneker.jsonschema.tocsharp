@@ -21,7 +21,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Unions_use_string_and_numeric_constraints()
+    public async ValueTask Unions_use_string_and_numeric_constraints()
     {
         var result = _generator.Generate("""
             {"title":"Choice","oneOf":[
@@ -46,7 +46,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Definitions_maps_allOf_and_nullable_enums_compile()
+    public async ValueTask Definitions_maps_allOf_and_nullable_enums_compile()
     {
         var result = _generator.Generate("""
             {"definitions":{
@@ -68,7 +68,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async Task AdaptiveCards_compile_and_round_trip()
+    public async ValueTask AdaptiveCards_compile_and_round_trip()
     {
         // Microsoft AdaptiveCards, MIT: schemas/1.5.0/adaptive-card.json, retrieved 2026-09-24.
         string json = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "adaptive-card-1.5.json"));
@@ -86,7 +86,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Recursive_models_optional_null_enums_and_unions_round_trip()
+    public async ValueTask Recursive_models_optional_null_enums_and_unions_round_trip()
     {
         const string schema = """
             {"type":"object","title":"Document","required":["name","choice"],"properties":{
@@ -128,7 +128,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Files_require_explicit_overwrite()
+    public async ValueTask Files_require_explicit_overwrite()
     {
         string directory = Path.Combine(Path.GetTempPath(), "schema-test-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
