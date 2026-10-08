@@ -21,7 +21,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask Unions_use_string_and_numeric_constraints()
+    public async ValueTask Unions_use_string_and_numeric_constraints(CancellationToken cancellationToken)
     {
         var result = _generator.Generate("""
             {"title":"Choice","oneOf":[
@@ -29,7 +29,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
               {"type":"string","pattern":"^b","minLength":2},
               {"type":"number","exclusiveMinimum":0,"maximum":10,"multipleOf":2},
               {"type":"number","minimum":20,"exclusiveMaximum":30}]}
-            """, new() { Namespace = "Example" });
+            """, new() { Namespace = "Example" }, cancellationToken: cancellationToken);
         await CompileAndRun(result, """
             using System.Text.Json;
             using Example;
@@ -42,11 +42,11 @@ public sealed class SchemaGenerationTests : HostedUnitTest
                 catch (JsonException) { continue; }
                 throw new System.Exception("Invalid union accepted: " + json);
             }
-            """);
+            """, cancellationToken: cancellationToken);
     }
 
     [Test]
-    public async ValueTask Definitions_maps_allOf_and_nullable_enums_compile()
+    public async ValueTask Definitions_maps_allOf_and_nullable_enums_compile(CancellationToken cancellationToken)
     {
         var result = _generator.Generate("""
             {"definitions":{
@@ -55,7 +55,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
               "Map":{"type":"object","additionalProperties":{"$ref":"#/definitions/Derived"}},
               "a/b~c":{"type":"object","properties":{"mixed":{"type":["string","integer","null"]}}},
               "Alias":{"$ref":"#/definitions/a~1b~0c"}}}
-            """, new() { Namespace = "Example" });
+            """, new() { Namespace = "Example" }, cancellationToken: cancellationToken);
         Check(result.RootType == "global::System.Text.Json.JsonElement", "Definitions-only root must remain unconstrained");
         Check(result.NamedTypes["#/definitions/a~1b~0c"] == result.NamedTypes["#/definitions/Alias"], "Escaped reference mismatch");
         await CompileAndRun(result, """
@@ -64,15 +64,15 @@ public sealed class SchemaGenerationTests : HostedUnitTest
             using Example.Models;
             var value = JsonSerializer.Deserialize<Derived>("{\"name\":\"test\",\"state\":null}", SchemaJsonContext.Default.Options)!;
             if (value.Name != "test" || !value.State.IsDefined || value.State.Value != null) throw new System.Exception("Inherited/nullable property");
-            """);
+            """, cancellationToken: cancellationToken);
     }
 
     [Test]
-    public async ValueTask AdaptiveCards_compile_and_round_trip()
+    public async ValueTask AdaptiveCards_compile_and_round_trip(CancellationToken cancellationToken)
     {
         // Microsoft AdaptiveCards, MIT: schemas/1.5.0/adaptive-card.json, retrieved 2026-09-24.
-        string json = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "adaptive-card-1.5.json"));
-        JsonSchemaToCSharpResult result = _generator.Generate(json, new() { Namespace = "Cards" });
+        string json = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "adaptive-card-1.5.json"), cancellationToken: cancellationToken);
+        JsonSchemaToCSharpResult result = _generator.Generate(json, new() { Namespace = "Cards" }, cancellationToken: cancellationToken);
         Check(result.Diagnostics.Count == 0, string.Join('\n', result.Diagnostics));
         string root = result.NamedTypes["#/definitions/AdaptiveCard"];
         await CompileAndRun(result, $$""""
@@ -82,11 +82,11 @@ public sealed class SchemaGenerationTests : HostedUnitTest
             string serialized = JsonSerializer.Serialize(value, Cards.SchemaJsonContext.Default.Options);
             if (!JsonElement.DeepEquals(JsonDocument.Parse(json).RootElement, JsonDocument.Parse(serialized).RootElement))
                 throw new System.Exception(serialized);
-            """");
+            """", cancellationToken: cancellationToken);
     }
 
     [Test]
-    public async ValueTask Recursive_models_optional_null_enums_and_unions_round_trip()
+    public async ValueTask Recursive_models_optional_null_enums_and_unions_round_trip(CancellationToken cancellationToken)
     {
         const string schema = """
             {"type":"object","title":"Document","required":["name","choice"],"properties":{
@@ -95,7 +95,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
               "choice":{"oneOf":[{"type":"string"},{"type":"integer"}]},
               "values":{"type":"array","items":{"type":"boolean"}}}}
             """;
-        var result = _generator.Generate(schema, new() { Namespace = "Example" });
+        var result = _generator.Generate(schema, new() { Namespace = "Example" }, cancellationToken: cancellationToken);
         await CompileAndRun(result, """"
             using System.Text.Json;
             using Example;
@@ -108,7 +108,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
             try { JsonSerializer.Deserialize<Document>("{\"name\":\"bad\",\"choice\":true}", SchemaJsonContext.Default.Options); }
             catch (JsonException) { return; }
             throw new System.Exception("Invalid union accepted");
-            """");
+            """", cancellationToken: cancellationToken);
     }
 
     [Test]
@@ -128,7 +128,7 @@ public sealed class SchemaGenerationTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask Files_require_explicit_overwrite()
+    public async ValueTask Files_require_explicit_overwrite(CancellationToken cancellationToken)
     {
         string directory = Path.Combine(Path.GetTempPath(), "schema-test-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -136,20 +136,20 @@ public sealed class SchemaGenerationTests : HostedUnitTest
         {
             string input = Path.Combine(directory, "schema.json");
             string output = Path.Combine(directory, "output");
-            await File.WriteAllTextAsync(input, "{\"type\":\"object\"}");
-            var first = await _generator.GenerateFile(input, output);
+            await File.WriteAllTextAsync(input, "{\"type\":\"object\"}", cancellationToken: cancellationToken);
+            var first = await _generator.GenerateFile(input, output, cancellationToken: cancellationToken);
             string path = Path.Combine(output, first.Files.Keys.First());
-            await File.WriteAllTextAsync(path, "sentinel");
-            try { await _generator.GenerateFile(input, output); throw new Exception("Overwrite accepted"); }
+            await File.WriteAllTextAsync(path, "sentinel", cancellationToken: cancellationToken);
+            try { await _generator.GenerateFile(input, output, cancellationToken: cancellationToken); throw new Exception("Overwrite accepted"); }
             catch (IOException) { }
-            Check(await File.ReadAllTextAsync(path) == "sentinel", "Existing output changed");
-            await _generator.GenerateFile(input, output, new() { Overwrite = true });
-            Check(await File.ReadAllTextAsync(path) != "sentinel", "Explicit overwrite failed");
+            Check(await File.ReadAllTextAsync(path, cancellationToken: cancellationToken) == "sentinel", "Existing output changed");
+            await _generator.GenerateFile(input, output, new() { Overwrite = true }, cancellationToken: cancellationToken);
+            Check(await File.ReadAllTextAsync(path, cancellationToken: cancellationToken) != "sentinel", "Explicit overwrite failed");
         }
         finally { Directory.Delete(directory, true); }
     }
 
-    private static async Task CompileAndRun(JsonSchemaToCSharpResult result, string program)
+    private static async Task CompileAndRun(JsonSchemaToCSharpResult result, string program, CancellationToken cancellationToken = default)
     {
         string directory = Path.Combine(Path.GetTempPath(), "schema-consumer-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -159,18 +159,18 @@ public sealed class SchemaGenerationTests : HostedUnitTest
             {
                 string path = Path.Combine(directory, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                await File.WriteAllTextAsync(path, source);
+                await File.WriteAllTextAsync(path, source, cancellationToken: cancellationToken);
             }
-            await File.WriteAllTextAsync(Path.Combine(directory, "Program.cs"), program);
+            await File.WriteAllTextAsync(Path.Combine(directory, "Program.cs"), program, cancellationToken: cancellationToken);
             await File.WriteAllTextAsync(Path.Combine(directory, "Consumer.csproj"), """"
                 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType>
                 <Nullable>enable</Nullable><JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
                 </PropertyGroup></Project>
-                """");
+                """", cancellationToken: cancellationToken);
             using var process = Process.Start(new ProcessStartInfo("dotnet", "run --project Consumer.csproj --verbosity quiet")
             { WorkingDirectory = directory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true })!;
-            Task<string> stdout = process.StandardOutput.ReadToEndAsync();
-            Task<string> stderr = process.StandardError.ReadToEndAsync();
+            Task<string> stdout = process.StandardOutput.ReadToEndAsync(cancellationToken: cancellationToken);
+            Task<string> stderr = process.StandardError.ReadToEndAsync(cancellationToken: cancellationToken);
             using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             try { await process.WaitForExitAsync(timeout.Token); }
             catch { process.Kill(true); await process.WaitForExitAsync(); throw; }
