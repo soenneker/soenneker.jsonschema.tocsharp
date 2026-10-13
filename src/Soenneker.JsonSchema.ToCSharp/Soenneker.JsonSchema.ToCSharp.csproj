@@ -45,9 +45,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
-        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2299" />
-        <PackageReference Include="Soenneker.Utils.Json" Version="4.0.2738" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2303" />
+        <PackageReference Include="Soenneker.Utils.Json" Version="4.0.2742" />
         <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="4.0.37" />
     </ItemGroup>
     <ItemGroup>
