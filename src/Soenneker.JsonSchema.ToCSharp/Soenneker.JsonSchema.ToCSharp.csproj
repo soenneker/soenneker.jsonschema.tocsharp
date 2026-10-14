@@ -46,9 +46,9 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
-        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2303" />
-        <PackageReference Include="Soenneker.Utils.Json" Version="4.0.2742" />
-        <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="4.0.37" />
+        <PackageReference Include="Soenneker.Utils.File" Version="4.0.2314" />
+        <PackageReference Include="Soenneker.Utils.Json" Version="4.0.2751" />
+        <PackageReference Include="Soenneker.Utils.PooledStringBuilders" Version="4.0.42" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="Templates\*.txt" LogicalName="JsonSchema.Templates.%(Filename)%(Extension)" />
