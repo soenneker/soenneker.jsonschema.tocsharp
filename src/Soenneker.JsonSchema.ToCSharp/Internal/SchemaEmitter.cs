@@ -294,7 +294,7 @@ internal sealed class SchemaEmitter
     {
         if (ReferenceEquals(target, _root))
             return "Root";
-        string tail = reference.Split('/').Last();
+        string tail = reference[(reference.LastIndexOf('/') + 1)..];
         return tail is "#" or "" ? fallback : Uri.UnescapeDataString(tail).Replace("~1", "/").Replace("~0", "~");
     }
 
